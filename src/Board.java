@@ -50,7 +50,7 @@ class Board implements Cloneable {
 	}
 
 	public List<Move> getMoves(Position p) {
-		Mark o = _board[p.y()][p.x()];
+		Mark o = _board[p.y][p.x];
 		int[][] moves;
 		if (o == Mark.B) {
 			moves = new int[][] { { -1, 1 }, { 0, 1 }, { 1, 1 } };
@@ -59,8 +59,8 @@ class Board implements Cloneable {
 		}
 		ArrayList<Move> nextMoves = new ArrayList<>();
 		for (int[] move : moves) {
-			int next_x = p.x() + move[0];
-			int next_y = p.y() + move[1];
+			int next_x = p.x + move[0];
+			int next_y = p.y + move[1];
 
 			// vérifie si pas outofbound
 			if (
@@ -83,26 +83,27 @@ class Board implements Cloneable {
 
 	private double distanceEuclidienne(Position p1, Position p2) {
 		return Math.sqrt(
-			Math.powExact(p1.x() - p2.x(), 2) +
-				Math.powExact(p1.y() - p2.y(), 2)
+			Math.pow(p1.x - p2.x, 2) +
+			Math.pow(p1.y - p2.y, 2)
+				
 		);
 	}
 
 	public boolean moveIsValid(Move m) {
 		if (
-			(m.target().x() < 0 ||
-				m.target().x() >= _board[m.target().x()].length) ||
-			(m.target().y() < 0 || m.target().y() >= _board.length)
+			(m.target.x < 0 ||
+				m.target.x >= _board[m.target.y].length) ||
+			(m.target.y < 0 || m.target.y >= _board.length)
 		) {
 			System.err.println(m.toString());
 			System.err.println("le move sort du plateau il n'est pas valide");
 			return false;
 		}
 
-		Mark oInit = _board[m.init().y()][m.init().x()];
-		Mark oTarg = _board[m.target().y()][m.target().x()];
+		Mark oInit = _board[m.init.y][m.init.x];
+		Mark oTarg = _board[m.target.y][m.target.x];
 
-		if (distanceEuclidienne(m.init(), m.target()) >= 2) {
+		if (distanceEuclidienne(m.init, m.target) >= 2) {
 			System.err.println(m.toString());
 			System.err.println("On ne se deplace pas de plus de 1 case");
 			return false;
@@ -115,7 +116,7 @@ class Board implements Cloneable {
 		} else {
 			if (oTarg != Mark.EMPTY) {
 				if (oTarg != oInit) {
-					if (m.init().x() == m.target().x()) {
+					if (m.init.x == m.target.x) {
 						System.err.println(m.toString());
 						System.err.println(
 							"On ne peu pas manger un adversaire en face de nous"
@@ -133,7 +134,7 @@ class Board implements Cloneable {
 		}
 
 		if (oInit == Mark.R) {
-			if (m.target().y() >= m.init().y()) {
+			if (m.target.y >= m.init.y) {
 				System.err.println(m.toString());
 				System.err.println(
 					"la position y du move pour R n'a pas changer dans le bon sens"
@@ -141,7 +142,7 @@ class Board implements Cloneable {
 				return false;
 			}
 		} else {
-			if (m.target().y() <= m.init().y()) {
+			if (m.target.y <= m.init.y) {
 				System.err.println(m.toString());
 				System.err.println(
 					"la position y du move pour B n'a pas changer dans le bon sens"
@@ -154,9 +155,9 @@ class Board implements Cloneable {
 
 	public void move(Move m) {
 		if (moveIsValid(m)) {
-			Mark oInit = _board[m.init().y()][m.init().x()];
-			_board[m.target().y()][m.target().x()] = oInit;
-			_board[m.init().y()][m.init().x()] = Mark.EMPTY;
+			Mark oInit = _board[m.init.y][m.init.x];
+			_board[m.target.y][m.target.x] = oInit;
+			_board[m.init.y][m.init.x] = Mark.EMPTY;
 		}
 	}
 

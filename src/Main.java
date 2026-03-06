@@ -1,13 +1,16 @@
 import java.util.List;
-import java.util.Random;
 
 class Main {
 
 	public static void main(String[] args) {
+
+		Client client = new Client();
+		client.run();
+
+
 		Board b = new Board();
 		System.out.println(b.toString());
 		Mark oTurn = Mark.B;
-		Random r = new Random();
 		Bot bot = new Bot(Mark.B);
 		while (b.hasWinner() == null) {
 			Move move;
@@ -16,7 +19,7 @@ class Main {
 				move = moves.get(0);
 			} else {
 				List<Move> moves = b.getMoves(oTurn);
-				int i = r.nextInt(0, moves.size());
+				int i = (int) (Math.random() * moves.size());
 				move = moves.get(i);
 			}
 			System.out.println(

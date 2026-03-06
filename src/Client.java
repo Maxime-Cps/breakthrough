@@ -1,13 +1,20 @@
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 class Client {
+	
+	private Socket MyClient = null;
+	private BufferedInputStream input = null;
+	private BufferedOutputStream output = null;
+	private Board b = new Board();
+	private Bot bot = null;
+	private Move move = null;
+	private String moveStr = null;
 
-	public static void main(String[] args) {
-		Socket MyClient;
-		BufferedInputStream input;
-		BufferedOutputStream output;
-		int[][] board = new int[8][8];
+
+	public void run() {
+		
 
 		try {
 			MyClient = new Socket("localhost", 8888);
@@ -34,8 +41,9 @@ class Client {
 				cmd = (char) input.read();
 				System.out.println(cmd);
 
-				// Debut de la partie en joueur blanc
+				// Debut de la partie en joueur rouge
 				if (cmd == '1') {
+					bot = new Bot(Mark.R);
 					byte[] aBuffer = new byte[1024];
 
 					int size = input.available();
@@ -47,26 +55,17 @@ class Client {
 					boardValues = s.split(" ");
 					int x = 0,
 						y = 0;
-					for (int i = 0; i < boardValues.length; i++) {
-						board[x][y] = Integer.parseInt(boardValues[i]);
-						x++;
-						if (x == 8) {
-							x = 0;
-							y++;
-						}
-					}
 
 					System.out.println(
-						"Nouvelle partie! Vous jouer blanc, entrez votre premier coup : "
+						"Nouvelle partie! Vous jouer rouge, entrez votre premier coup : "
 					);
-					String move = null;
-					move = console.readLine();
-					output.write(move.getBytes(), 0, move.length());
-					output.flush();
+
+					moveBot();
 				}
 
 				// Debut de la partie en joueur Noir
 				if (cmd == '2') {
+					bot = new Bot(Mark.B);
 					System.out.println(
 						"Nouvelle partie! Vous jouer noir, attendez le coup des blancs"
 					);
@@ -77,18 +76,6 @@ class Client {
 					input.read(aBuffer, 0, size);
 					String s = new String(aBuffer).trim();
 					System.out.println(s);
-					String[] boardValues;
-					boardValues = s.split(" ");
-					int x = 0,
-						y = 0;
-					for (int i = 0; i < boardValues.length; i++) {
-						board[x][y] = Integer.parseInt(boardValues[i]);
-						x++;
-						if (x == 8) {
-							x = 0;
-							y++;
-						}
-					}
 				}
 
 				// Le serveur demande le prochain coup
@@ -100,13 +87,13 @@ class Client {
 					System.out.println("size :" + size);
 					input.read(aBuffer, 0, size);
 
-					String s = new String(aBuffer);
-					System.out.println("Dernier coup :" + s);
+					moveStr = new String(aBuffer);
+					move = new Move(moveStr.trim());
+					b.move(move);
+					System.out.println("Dernier coup :" + moveStr);
 					System.out.println("Entrez votre coup : ");
-					String move = null;
-					move = console.readLine();
-					output.write(move.getBytes(), 0, move.length());
-					output.flush();
+					
+					moveBot();
 				}
 
 				// Le dernier coup est invalide
@@ -138,5 +125,16 @@ class Client {
 		} catch (IOException e) {
 			System.out.println(e);
 		}
+	}
+
+	private void moveBot() throws IOException {
+		List<Move> moves = bot.getNextMoveAB(b);
+		move = moves.get(0);
+		moveStr = move.toString();
+
+		b.move(move);
+
+		output.write(moveStr.getBytes(), 0, moveStr.length());
+		output.flush();
 	}
 }
