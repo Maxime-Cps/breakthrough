@@ -35,11 +35,7 @@ class Client {
 			}
 
 			while (true) {
-				char cmd = 0;
-
-				System.out.println("j'attend le message du serveur");
-				cmd = (char) input.read();
-				System.out.println(cmd);
+				char cmd = (char) input.read();
 
 				// Debut de la partie en joueur rouge
 				if (cmd == '1') {
@@ -47,17 +43,10 @@ class Client {
 					byte[] aBuffer = new byte[1024];
 
 					int size = input.available();
-					System.out.println("size " + size);
 					input.read(aBuffer, 0, size);
-					String s = new String(aBuffer).trim();
-					System.out.println(s);
-					String[] boardValues;
-					boardValues = s.split(" ");
-					int x = 0,
-						y = 0;
 
 					System.out.println(
-						"Nouvelle partie! Vous jouer rouge, entrez votre premier coup : "
+						"New game! You play Red"
 					);
 
 					moveBot();
@@ -67,31 +56,19 @@ class Client {
 				if (cmd == '2') {
 					bot = new Bot(Mark.B);
 					System.out.println(
-						"Nouvelle partie! Vous jouer noir, attendez le coup des blancs"
+						"New game! You play Black"
 					);
 					byte[] aBuffer = new byte[1024];
 
 					int size = input.available();
 					//System.out.println("size " + size);
 					input.read(aBuffer, 0, size);
-					String s = new String(aBuffer).trim();
-					System.out.println(s);
 				}
 
 				// Le serveur demande le prochain coup
 				// Le message contient aussi le dernier coup joue.
 				if (cmd == '3') {
-					byte[] aBuffer = new byte[16];
-
-					int size = input.available();
-					System.out.println("size :" + size);
-					input.read(aBuffer, 0, size);
-
-					moveStr = new String(aBuffer);
-					move = new Move(moveStr.trim());
-					b.move(move);
-					System.out.println("Dernier coup :" + moveStr);
-					System.out.println("Entrez votre coup : ");
+					moveOthers();
 					
 					moveBot();
 				}
@@ -114,8 +91,9 @@ class Client {
 					input.read(aBuffer, 0, size);
 					String s = new String(aBuffer);
 					System.out.println(
-						"Partie Terminé. Le dernier coup joué est: " + s
+						"Partie Terminé. Le gagnant est : " + s.trim().charAt(0)
 					);
+
 					String move = null;
 					move = console.readLine();
 					output.write(move.getBytes(), 0, move.length());
@@ -127,12 +105,29 @@ class Client {
 		}
 	}
 
+	private void moveOthers() throws IOException {
+		byte[] aBuffer = new byte[16];
+
+		int size = input.available();
+		input.read(aBuffer, 0, size);
+
+		moveStr = new String(aBuffer);
+		move = new Move(moveStr.trim());
+		b.move(move);
+		System.out.println(
+			bot.getEnnemieMark().toString()  + " " + move.toString() + "\n" + b.toString()
+		);
+	}
+
 	private void moveBot() throws IOException {
 		List<Move> moves = bot.getNextMoveAB(b);
 		move = moves.get(0);
 		moveStr = move.toString();
 
 		b.move(move);
+		System.out.println(
+			bot.getPlayerMark().toString()  + " " + move.toString() + "\n" + b.toString()
+		);
 
 		output.write(moveStr.getBytes(), 0, moveStr.length());
 		output.flush();

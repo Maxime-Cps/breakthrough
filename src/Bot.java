@@ -21,6 +21,14 @@ class Bot {
 		}
 	}
 
+	public Mark getPlayerMark() {
+		return _player;
+	}
+
+	public Mark getEnnemieMark() {
+		return _ennemie;
+	}
+
 	public ArrayList<Move> getNextMoveAB(Board board) {
 		List<Move> move_list = board.getMoves(_player);
 		ArrayList<Move> best_move_list = new ArrayList<>();
