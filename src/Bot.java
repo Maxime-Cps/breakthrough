@@ -138,7 +138,7 @@ class Bot {
 			}
 
 			// Victoire/défaite certaine trouvée : inutile d'aller plus loin
-			if (Math.abs(bestScore) > 90) break;
+			if (Math.abs(bestScore) > 900) break;
 		}
 
 		System.out.println("Score final : " + lastCompleteScore);
@@ -168,18 +168,15 @@ class Bot {
 		long hash = board.getZobristHash();
 		TTEntry cached = _transpositionTable.get(hash);
 		if (cached != null && cached.depth >= (maxDepth - profondeur)) {
-			if (cached.flag == 0) return cached.score; // Score exact
-			if (cached.flag == 1) alpha = Math.max(alpha, cached.score); // Borne inférieure
-			if (cached.flag == 2) beta = Math.min(beta, cached.score); // Borne supérieure
-			if (alpha >= beta) return cached.score;
+			if (cached.flag == 0) return cached.score;
 		}
 
 		// Cas terminal : victoire/défaite
 		Mark winner = board.hasWinner();
 		if (winner != null) {
 			return (winner == _player)
-				? (100 - profondeur)
-				: (-100 + profondeur);
+				? (1000 - profondeur)
+				: (-1000 + profondeur);
 		}
 
 		// Profondeur max atteinte : évaluation statique
@@ -289,7 +286,7 @@ class Bot {
 		List<Move> others = new ArrayList<>();
 
 		for (Move move : moves) {
-			if (isCapture(move, board)) {
+			if (board.isCapture(move)) {
 				captures.add(move);
 			} else if (moveEquals(move, killer1) || moveEquals(move, killer2)) {
 				killers.add(move);
@@ -305,11 +302,6 @@ class Bot {
 		ordered.addAll(killers);
 		ordered.addAll(others);
 		return ordered;
-	}
-
-	/** Retourne true si le coup capture une pièce adverse (déplacement diagonal). */
-	private boolean isCapture(Move move, Board board) {
-		return move.init.x != move.target.x; // déplacement latéral = capture potentielle
 	}
 
 	/** Stocke un killer move à la profondeur donnée (2 slots en rotation). */

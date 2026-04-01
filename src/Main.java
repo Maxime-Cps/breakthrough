@@ -11,7 +11,7 @@ class Main {
 			System.out.println(b.toString());
 			Mark oTurn = Mark.B;
 			Bot bot = new Bot(Mark.B);
-			BotNew nb = new BotNew(Mark.R);
+			Bot nb = new Bot(Mark.R);
 			while (b.hasWinner() == null) {
 				Move move;
 				if (oTurn == Mark.B) {

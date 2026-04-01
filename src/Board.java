@@ -54,6 +54,13 @@ class Board implements Cloneable {
 		return cloned;
 	}
 
+	public Boolean isCapture(Move m) {
+		return (
+			_board[m.target.y][m.target.x] != Mark.EMPTY &&
+			_board[m.target.y][m.target.x] != _board[m.init.y][m.init.x]
+		);
+	}
+
 	public List<Move> getMoves(Mark o) {
 		List<Move> moves = new ArrayList<>();
 
@@ -226,69 +233,61 @@ class Board implements Cloneable {
 	}
 
 	public int evaluate(Mark m) {
+		Mark enemy = (m == Mark.R) ? Mark.B : Mark.R;
+
 		int numPlayer = 0;
 		int numEnnemi = 0;
-		int mostAdvenceMark;
-		if (m == Mark.B) {
-			mostAdvenceMark = 0;
-		} else {
-			mostAdvenceMark = 7;
-		}
+		int advanceScore = 0;
+		int dangerScore = 0;
+
 		for (int i = 0; i < _board.length; i++) {
 			for (int j = 0; j < _board[i].length; j++) {
 				if (_board[i][j] == m) {
 					if (m == Mark.B) {
-						if (i > mostAdvenceMark) {
-							mostAdvenceMark = i;
-						}
+						advanceScore += (int) Math.pow(2, i);
 					} else {
-						if (i < mostAdvenceMark) {
-							mostAdvenceMark = i;
-						}
+						advanceScore += (int) Math.pow(2, -(i - 7));
 					}
 					numPlayer++;
+
+					int advance = (m == Mark.R) ? (7 - i) : i;
+
+					// Direction explicite selon la couleur
+					int frontRow;
+					int behindRow;
+					if (m == Mark.R) {
+						frontRow = i - 1; // R avance vers les petits indices
+						behindRow = i + 1; // derrière R = grands indices
+					} else {
+						frontRow = i + 1; // B avance vers les grands indices
+						behindRow = i - 1; // derrière B = petits indices
+					}
+
+					boolean threatened =
+						frontRow >= 0 &&
+						frontRow < 8 &&
+						((j > 0 && _board[frontRow][j - 1] == enemy) ||
+							(j < 7 && _board[frontRow][j + 1] == enemy));
+
+					if (threatened) {
+						boolean hasBreakthroughAlly =
+							behindRow >= 0 &&
+							behindRow < 8 &&
+							((j > 0 && _board[behindRow][j - 1] == m) ||
+								(j < 7 && _board[behindRow][j + 1] == m) ||
+								(_board[behindRow][j] == m));
+
+						if (!hasBreakthroughAlly) {
+							dangerScore -= 10 * advance;
+						}
+					}
 				} else if (_board[i][j] != Mark.EMPTY) {
 					numEnnemi++;
 				}
 			}
 		}
-		if (m == Mark.R) {
-			mostAdvenceMark = 7 - mostAdvenceMark;
-		}
-		return (numPlayer - numEnnemi) + (2 * mostAdvenceMark);
-	}
 
-	public int evaluateNew(Mark m) {
-		int numPlayer = 0;
-		int numEnnemi = 0;
-		int mostAdvanceMark = (m == Mark.B) ? 0 : 7; // Initialisation conditionnelle
-
-		final int boardLength = _board.length;
-		for (int i = 0; i < boardLength; i++) {
-			final int rowLength = _board[i].length;
-			for (int j = 0; j < rowLength; j++) {
-				final Mark currentMark = _board[i][j];
-
-				if (currentMark == m) {
-					numPlayer++;
-					if (m == Mark.B) {
-						if (i > mostAdvanceMark) mostAdvanceMark = i;
-					} else {
-						if (i < mostAdvanceMark) mostAdvanceMark = i;
-					}
-				} else if (currentMark != Mark.EMPTY) {
-					numEnnemi++;
-				}
-			}
-		}
-
-		// Ajustement pour les pièces rouges (si nécessaire)
-		if (m == Mark.R) {
-			mostAdvanceMark = 7 - mostAdvanceMark;
-		}
-
-		// Calcul final de l'évaluation
-		return (numPlayer - numEnnemi) + mostAdvanceMark;
+		return (numPlayer - numEnnemi) + advanceScore + dangerScore;
 	}
 
 	@Override

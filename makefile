@@ -1,13 +1,13 @@
 all: build
 
 build: buildDir
-	javac -d build src/Client.java src/Main.java src/Board.java src/Mark.java src/Move.java src/Position.java src/Bot.java
+	javac -d build src/Client.java src/Main.java src/Board.java src/Mark.java src/Move.java src/Position.java src/Bot.java src/BotNew.java
 
-launch: build
-	java -cp build Main
+launchLocal: build
+	java -cp build Main --local
 
-launch_cli: build
-	java -cp build Client
+launchClient: build
+	java -cp build Main --client
 
 buildDir:
 	mkdir -p build
