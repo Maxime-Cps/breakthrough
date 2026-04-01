@@ -278,7 +278,7 @@ class Board implements Cloneable {
 								(_board[behindRow][j] == m));
 
 						if (!hasBreakthroughAlly) {
-							dangerScore -= 10 * advance;
+							dangerScore -= 2 * Math.pow(2, advance);
 						}
 					}
 				} else if (_board[i][j] != Mark.EMPTY) {
@@ -287,7 +287,7 @@ class Board implements Cloneable {
 			}
 		}
 
-		return (numPlayer - numEnnemi) + advanceScore + dangerScore;
+		return 100 * (numPlayer - numEnnemi) + advanceScore + dangerScore;
 	}
 
 	@Override
