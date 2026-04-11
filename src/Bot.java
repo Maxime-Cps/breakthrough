@@ -16,34 +16,14 @@ class Bot {
 	// Flag d'interruption : true quand le temps est écoulé
 	private boolean _timeout;
 
-	// Table de transpositions : clé = hash du plateau, valeur = entrée cachée
-	private HashMap<Long, TTEntry> _transpositionTable;
-
 	// Killer moves : [profondeur][slot 0 ou 1]
 	// Mémorise les coups qui ont causé une coupure bêta récemment
 	private Move[][] _killerMoves;
 	private static final int MAX_DEPTH = 30;
 
-	// Entrée dans la table de transpositions
-	private static class TTEntry {
-
-		int score;
-		int depth;
-		int flag; // EXACT=0, LOWER=1, UPPER=2
-		Move bestMove;
-
-		TTEntry(int score, int depth, int flag, Move bestMove) {
-			this.score = score;
-			this.depth = depth;
-			this.flag = flag;
-			this.bestMove = bestMove;
-		}
-	}
-
 	public Bot(Mark cpu) {
 		_player = cpu;
 		_ennemie = (cpu == Mark.R) ? Mark.B : Mark.R;
-		_transpositionTable = new HashMap<>(1 << 20); // ~1M entrées
 		_killerMoves = new Move[MAX_DEPTH][2];
 	}
 
@@ -63,7 +43,6 @@ class Bot {
 	public ArrayList<Move> getNextMoveAB(Board board) {
 		_startTime = System.nanoTime();
 		_timeout = false;
-		_transpositionTable.clear();
 		_killerMoves = new Move[MAX_DEPTH][2];
 
 		ArrayList<Move> bestMoveList = new ArrayList<>();
@@ -164,13 +143,6 @@ class Bot {
 	) {
 		if (isTimeout()) return 0;
 
-		// Consultation de la table de transpositions
-		long hash = board.getZobristHash();
-		TTEntry cached = _transpositionTable.get(hash);
-		if (cached != null && cached.depth >= (maxDepth - profondeur)) {
-			if (cached.flag == 0) return cached.score;
-		}
-
 		// Cas terminal : victoire/défaite
 		Mark winner = board.hasWinner();
 		if (winner != null) {
@@ -186,9 +158,6 @@ class Bot {
 
 		List<Move> moveList = board.getMoves(player);
 		List<Move> orderedMoves = orderMoves(moveList, board, profondeur);
-
-		int originalAlpha = alpha;
-		Move bestMove = null;
 
 		if (player == _player) {
 			// Nœud MAX
@@ -209,7 +178,6 @@ class Bot {
 
 				if (score > maxScore) {
 					maxScore = score;
-					bestMove = move;
 				}
 				if (maxScore >= beta) {
 					// Coupure bêta : mémoriser ce coup comme killer
@@ -219,19 +187,9 @@ class Bot {
 				alpha = Math.max(maxScore, alpha);
 			}
 
-			// Stockage dans la table de transpositions
-			storeTransposition(
-				hash,
-				maxScore,
-				maxDepth - profondeur,
-				alpha,
-				beta,
-				originalAlpha,
-				bestMove
-			);
 			return maxScore;
 		} else {
-			// Nœud MIN
+			// Noeud MIN
 			int minScore = Integer.MAX_VALUE;
 			for (Move move : orderedMoves) {
 				if (isTimeout()) return 0;
@@ -249,7 +207,6 @@ class Bot {
 
 				if (score < minScore) {
 					minScore = score;
-					bestMove = move;
 				}
 				if (minScore <= alpha) {
 					storeKillerMove(move, profondeur);
@@ -257,16 +214,6 @@ class Bot {
 				}
 				beta = Math.min(minScore, beta);
 			}
-
-			storeTransposition(
-				hash,
-				minScore,
-				maxDepth - profondeur,
-				alpha,
-				beta,
-				originalAlpha,
-				bestMove
-			);
 			return minScore;
 		}
 	}
@@ -310,32 +257,6 @@ class Bot {
 		if (!moveEquals(_killerMoves[depth][0], move)) {
 			_killerMoves[depth][1] = _killerMoves[depth][0];
 			_killerMoves[depth][0] = move;
-		}
-	}
-
-	/** Stocke le résultat dans la table de transpositions. */
-	private void storeTransposition(
-		long hash,
-		int score,
-		int depth,
-		int alpha,
-		int beta,
-		int originalAlpha,
-		Move bestMove
-	) {
-		int flag;
-		if (score <= originalAlpha) flag = 2;
-		// Borne supérieure (UPPER)
-		else if (score >= beta) flag = 1;
-		// Borne inférieure (LOWER)
-		else flag = 0; // Score exact (EXACT)
-
-		TTEntry existing = _transpositionTable.get(hash);
-		if (existing == null || depth >= existing.depth) {
-			_transpositionTable.put(
-				hash,
-				new TTEntry(score, depth, flag, bestMove)
-			);
 		}
 	}
 

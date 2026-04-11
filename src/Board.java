@@ -4,13 +4,6 @@ import java.util.List;
 class Board implements Cloneable {
 
 	private Mark _board[][] = new Mark[8][8];
-	private static final long[][][] zobristTable = new long[8][8][2];
-	private long _zobristHash = 0L;
-
-	// Retourne le hash courant
-	public long getZobristHash() {
-		return _zobristHash;
-	}
 
 	public Board() {
 		// init le plateau
@@ -25,18 +18,6 @@ class Board implements Cloneable {
 				}
 			}
 		}
-
-		// init tableau aléatoire
-		java.util.Random rng = new java.util.Random(123456789L); // seed fixe = reproductible
-		for (int row = 0; row < 8; row++) for (
-			int col = 0;
-			col < 8;
-			col++
-		) for (
-			int piece = 0;
-			piece < 2;
-			piece++
-		) zobristTable[row][col][piece] = rng.nextLong();
 	}
 
 	@Override
@@ -189,33 +170,10 @@ class Board implements Cloneable {
 	}
 
 	public void move(Move m) {
-		applyMoveZobrist(m);
 		if (moveIsValid(m)) {
 			_board[m.target.y][m.target.x] = _board[m.init.y][m.init.x];
 			_board[m.init.y][m.init.x] = Mark.EMPTY;
 		}
-	}
-
-	private int pieceIndex(Mark mark) {
-		return (mark == Mark.R) ? 0 : 1;
-	}
-
-	private void applyMoveZobrist(Move m) {
-		// Retire la pièce de sa case de départ
-		_zobristHash ^= zobristTable[m.init.y][m.init.x][pieceIndex(
-			_board[m.init.y][m.init.x]
-		)];
-
-		// Retire la pièce capturée si présente
-		if (_board[m.target.y][m.target.x] != Mark.EMPTY) _zobristHash ^=
-			zobristTable[m.target.y][m.target.x][pieceIndex(
-				_board[m.target.y][m.target.x]
-			)];
-
-		// Place la pièce sur sa case d'arrivée
-		_zobristHash ^= zobristTable[m.target.y][m.target.x][pieceIndex(
-			_board[m.init.y][m.init.x]
-		)];
 	}
 
 	public Mark hasWinner() {
