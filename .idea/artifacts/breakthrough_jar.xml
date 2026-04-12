@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="breakthrough:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/breakthrough_jar</output-path>
+    <root id="archive" name="breakthrough.jar">
+      <element id="module-output" name="breakthrough" />
+    </root>
+  </artifact>
+</component>

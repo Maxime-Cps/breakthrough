@@ -12,12 +12,17 @@ class Client {
 	private Move move = null;
 	private String moveStr = null;
 
+	private String host;
+	private int port;
+
+	public Client(String host, int port) {
+		this.host = host;
+		this.port = port;
+	}
 
 	public void run() {
-		
-
 		try {
-			MyClient = new Socket("localhost", 8888);
+			MyClient = new Socket(host, port);
 
 			input = new BufferedInputStream(MyClient.getInputStream());
 			output = new BufferedOutputStream(MyClient.getOutputStream());
